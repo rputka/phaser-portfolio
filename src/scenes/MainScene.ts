@@ -63,8 +63,6 @@ export default class MainScene extends Phaser.Scene {
 
       // Build custom Arcade bodies from Tiled per-tile collision rectangles
       const customCollisionGroup = this.physics.add.staticGroup();
-      const shapeDebug = this.add.graphics({ x: 0, y: 0 });
-      shapeDebug.lineStyle(1, 0xff00ff, 0.7);
 
       collisionLayers.forEach(layer => {
         if (!layer) return;
@@ -112,9 +110,6 @@ export default class MainScene extends Phaser.Scene {
             const zone = this.add.zone(worldX, worldY, ow, oh);
             this.physics.add.existing(zone, true); // static body
             customCollisionGroup.add(zone);
-
-            // Debug draw
-            shapeDebug.strokeRect(tile.pixelX + ox, tile.pixelY + oy, ow, oh);
           });
         });
       });
