@@ -1,8 +1,10 @@
 import Phaser from 'phaser';
 import Player from '../objects/Player';
+import VirtualDPad from '../ui/VirtualDPad';
 
 export default class MainScene extends Phaser.Scene {
   private player!: Player;
+  private dpad?: VirtualDPad;
 
   constructor() {
     super({ key: 'MainScene' });
@@ -144,6 +146,13 @@ export default class MainScene extends Phaser.Scene {
     // Camera
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
     this.cameras.main.setZoom(2);
+
+    // Mobile: wrap in Game Boy shell and enable virtual D-Pad
+    const isTouch = this.sys.game.device.input.touch;
+    if (isTouch) {
+      this.dpad = new VirtualDPad();
+      this.player.setVirtualInput(this.dpad.state);
+    }
 
     // Physics
   }

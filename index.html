@@ -13,13 +13,305 @@
         justify-content: center;
         align-items: center;
         height: 100vh;
+        overflow-x: hidden; /* prevent horizontal scrolling */
       }
       canvas {
         display: block;
       }
+      html { overflow-x: hidden; }
+      /* Mobile Game Boy frame and controls; unused on desktop unless activated */
+      .gameboy {
+        position: relative;
+        width: min(92vw, 420px);
+        background: #930022; /* soft pink shell */
+        border-radius: 24px;
+        box-shadow: 0 12px 24px rgba(0,0,0,0.35), inset 0 2px 0 rgba(255,255,255,0.5);
+        padding: 16px 16px 24px 16px;
+        height: auto;
+        box-sizing: border-box;
+      }
+      .gb-header {
+        height: 16px;
+        background: #f0b4c0;
+        border-radius: 12px 12px 6px 6px;
+        margin-bottom: 12px;
+      }
+      .gb-screen {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 10px;
+        border: 10px solid #000; /* thin black border around the game screen */
+        border-bottom-width: 30px; /* larger bottom border for logo */
+        box-shadow: inset 0 0 0 2px rgba(0,0,0,0.15);
+        min-height: 0;
+        position: relative;
+        overflow: visible; /* allow logo to sit in the border area */
+      }
+      .gb-logo {
+        position: absolute;
+        bottom: -24px;
+        width: 100%;
+        text-align: center;
+        color: #fff; /* contrast against black border */
+        font-family: sans-serif;
+        font-weight: bold;
+        font-style: italic;
+        font-size: 14px;
+        letter-spacing: 1px;
+        pointer-events: none;
+        z-index: 10;
+      }
+      .gb-screen #game {
+        position: absolute;
+        inset: 0;               /* fill the white screen area */
+        width: 100%;
+        height: 100%;
+      }
+      .gb-screen canvas {
+        width: 100% !important;    /* stretch to fill the white area */
+        height: 100% !important;
+        max-width: 100%;
+        object-fit: cover;         /* fill without stretching; crop overflow */
+        image-rendering: pixelated;
+      }
+      .gb-controls {
+        position: relative;
+        margin-top: 16px;
+        height: 220px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        align-items: center;
+        justify-items: center;
+      }
+      /* Single Cross D-pad */
+      .gb-dpad {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.1); /* recessed base */
+        box-shadow: inset 1px 1px 5px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        touch-action: none;
+        user-select: none;
+      }
+      .gb-cross {
+        position: relative;
+        width: 90%;
+        height: 90%;
+        /* Draw the cross using gradients or clip-path could work, but let's use ::before/::after for the cross shape */
+        background: transparent;
+        z-index: 5;
+      }
+      /* Horizontal bar */
+      .gb-cross::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 34%; /* balanced thickness */
+        background: #3b3b3b;
+        transform: translateY(-50%);
+        border-radius: 6px;
+        box-shadow: 0 4px 0 #222, inset 1px 1px 2px rgba(255,255,255,0.2);
+      }
+      /* Vertical bar */
+      .gb-cross::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 0;
+        height: 100%;
+        width: 34%; /* match horizontal thickness */
+        background: #3b3b3b;
+        transform: translateX(-50%);
+        border-radius: 6px;
+        box-shadow: 0 4px 0 #222, inset 1px 1px 2px rgba(255,255,255,0.2);
+      }
+      /* Center cap to smooth intersection */
+      .gb-cross-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 35%; /* slight overlap to cover seams */
+        height: 35%;
+        transform: translate(-50%, -50%);
+        background: #3b3b3b;
+        z-index: 6;
+        /* fill the gap visually */
+      }
+      .gb-dpad:active .gb-cross::before,
+      .gb-dpad:active .gb-cross::after {
+        transform: translate(-50%, -50%) scale(0.98); /* subtle press effect */
+        box-shadow: 0 2px 0 #222;
+      }
+      /* Fix specific transforms for active state */
+      .gb-dpad:active .gb-cross::before { transform: translateY(calc(-50% + 2px)); }
+      .gb-dpad:active .gb-cross::after { transform: translateX(-50%) translateY(2px); }
+
+      /* Hide old separate arms */
+      .gb-darm { display: none; }
+
+      /* A/B Buttons: dark grey, recessed pill base */
+      .gb-ab-group {
+        position: relative;
+        width: 200px;
+        height: 100px;
+        background: rgba(0,0,0,0.1); /* recessed pill shape */
+        border-radius: 50px;
+        box-shadow: inset 1px 1px 5px rgba(0,0,0,0.2);
+        transform: rotate(-15deg); /* slight angle like SP */
+      }
+      .gb-round {
+        position: absolute;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #3b3b3b; /* dark grey buttons */
+        box-shadow: 0 3px 0 #222, inset 1px 1px 2px rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: sans-serif;
+        font-weight: bold;
+        color: #1a1a1a; /* engraved look text */
+        text-shadow: 0 1px 0 rgba(255,255,255,0.1);
+        touch-action: none;
+        user-select: none;
+        transform: rotate(15deg); /* Counter-rotate so letters are upright */
+      }
+      .gb-round:active { transform: rotate(15deg) translateY(2px); box-shadow: 0 1px 0 #222; }
+      /* Use translateY(-50%) for vertical centering, and rotate(15deg) to counter-rotate */
+      .gb-round.b { left: 25px; top: 50%; transform: translateY(-50%) rotate(15deg); }
+      .gb-round.a { right: 25px; top: 50%; transform: translateY(-50%) rotate(15deg); }
+
+      /* Hide the Game Boy frame by default on large screens; we will enable it via JS on mobile */
+      .gameboy.hidden {
+        display: none;
+      }
+
+      /* Mobile & tablets (coarse pointer): stack from top; scale to viewport */
+      @media (pointer: coarse) {
+        body {
+          display: flex;
+          justify-content: center;
+          align-items: stretch;
+          height: 100dvh;
+          padding: 0;
+          font-size: 16px; /* base for em units if needed */
+        }
+        .gameboy {
+          margin: 0 auto;
+          width: 100vw;                   /* span full width on mobile/tablet */
+          height: 100dvh;                 /* span full height */
+          display: flex;
+          flex-direction: column;
+          /* Scale frame details with viewport width */
+          border-radius: clamp(12px, 3vw, 32px);
+          padding: clamp(8px, 2.5vw, 32px);
+        }
+        .gb-screen {
+          flex: 1 1 0;                    /* top half (large screen) */
+          display: block;                 /* allow child to stretch full width/height */
+          padding: clamp(6px, 2vw, 24px);
+          /* Scale borders for larger screens */
+          border-width: clamp(8px, 2vw, 20px);
+          border-bottom-width: clamp(24px, 6vw, 60px);
+          border-radius: clamp(8px, 2vw, 20px);
+        }
+        .gb-logo {
+          /* Scale logo position and size */
+          /* height matches border-bottom-width: clamp(24px, 6vw, 60px) */
+          /* position it exactly over the bottom border area */
+          /* Note: for negative clamp, min/max order is reversed */
+          bottom: clamp(-60px, -6vw, -24px);
+          left: 0;
+          width: 100%;
+          height: clamp(24px, 6vw, 60px);
+          
+          /* Vertically and horizontally center the text */
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          
+          font-size: clamp(12px, 3vw, 24px);
+          letter-spacing: clamp(1px, 0.2vw, 3px);
+          text-align: center;
+          pointer-events: none;
+          z-index: 10;
+        }
+        .gb-controls {
+          flex: 1 1 0;                    /* take the other half */
+          margin-top: clamp(8px, 2.5vw, 32px);
+          height: auto;                   /* override desktop fixed height */
+          min-height: 0;
+          position: relative;
+          gap: clamp(8px, 3vw, 40px);
+        }
+        .gb-screen canvas {
+          width: 100% !important;
+          height: 100% !important;        /* fill the white area height too */
+          max-height: 100%;
+          object-fit: cover;               /* maintain aspect ratio, crop if needed */
+        }
+        .gb-controls { height: auto; }
+
+        /* Responsive controls sizing - Use vmin/vmax or percentage of container */
+        .gb-dpad {
+          /* Scale D-pad with available space, maxing out reasonably */
+          width: min(42vw, 38vh);
+          height: min(42vw, 38vh);
+          aspect-ratio: 1 / 1;
+          /* Scale recessed shadow depth */
+          box-shadow: inset 0.2vw 0.2vw 1vw rgba(0,0,0,0.2);
+        }
+        /* A/B Group container scaling */
+        .gb-ab-group {
+          /* Use same responsive logic as D-pad but strictly width/height ratio */
+          width: min(42vw, 38vh);
+          height: min(21vw, 19vh); /* Half height for pill shape */
+          border-radius: 100vw;    /* pill shape */
+          box-shadow: inset 0.2vw 0.2vw 1vw rgba(0,0,0,0.2);
+        }
+        /* D-pad bars */
+        .gb-cross::before {
+          border-radius: 1vw;
+          box-shadow: 0 0.8vw 0 #222, inset 0.2vw 0.2vw 0.4vw rgba(255,255,255,0.2);
+        }
+        .gb-cross::after {
+          border-radius: 1vw;
+          box-shadow: 0 0.8vw 0 #222, inset 0.2vw 0.2vw 0.4vw rgba(255,255,255,0.2);
+        }
+        .gb-dpad:active .gb-cross::before,
+        .gb-dpad:active .gb-cross::after {
+          box-shadow: 0 0.4vw 0 #222;
+        }
+
+        /* Round buttons scale with container */
+        .gb-round {
+          width: 34%;
+          height: auto;
+          aspect-ratio: 1 / 1;
+          font-size: clamp(14px, 4vw, 32px); /* Larger max font size for tablets */
+          box-shadow: 0 0.6vw 0 #222, inset 0.2vw 0.2vw 0.4vw rgba(255,255,255,0.2);
+        }
+        .gb-round:active {
+          transform: rotate(15deg) translateY(0.4vw);
+          box-shadow: 0 0.2vw 0 #222;
+        }
+        .gb-round.x { top: 0; left: 50%; transform: translate(-50%, 0); }
+        .gb-round.y { left: 0; top: 50%; transform: translate(0, -50%); }
+        .gb-round.a { right: 12%; top: 50%; transform: translateY(-50%) rotate(15deg); }
+        .gb-round.b { left: 12%; top: 50%; transform: translateY(-50%) rotate(15deg); }
+      }
     </style>
   </head>
   <body>
+    <!-- The Game Boy wrapper is injected on mobile; on desktop we keep #game directly in body -->
     <div id="game"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

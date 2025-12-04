@@ -14,6 +14,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   private wasd: { up: Phaser.Input.Keyboard.Key; left: Phaser.Input.Keyboard.Key; down: Phaser.Input.Keyboard.Key; right: Phaser.Input.Keyboard.Key };
   private moveSpeed = 120;
   private keyboard: Phaser.Input.Keyboard.KeyboardPlugin;
+  private virtual?: { up: boolean; down: boolean; left: boolean; right: boolean };
 
   constructor(
     scene: Phaser.Scene,
@@ -48,6 +49,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.anims.stop();
   }
 
+  /** Link a virtual D-Pad state object for mobile controls. */
+  public setVirtualInput(state: { up: boolean; down: boolean; left: boolean; right: boolean }): void {
+    this.virtual = state;
+  }
+
   private createAnimations(scene: Phaser.Scene) {
     const anims = scene.anims;
     const has = (key: string) => anims.exists(key);
@@ -68,10 +74,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   update() {
-    const up = this.cursors.up?.isDown || this.wasd.up.isDown;
-    const down = this.cursors.down?.isDown || this.wasd.down.isDown;
-    const left = this.cursors.left?.isDown || this.wasd.left.isDown;
-    const right = this.cursors.right?.isDown || this.wasd.right.isDown;
+    const up = (this.cursors.up?.isDown || this.wasd.up.isDown) || Boolean(this.virtual?.up);
+    const down = (this.cursors.down?.isDown || this.wasd.down.isDown) || Boolean(this.virtual?.down);
+    const left = (this.cursors.left?.isDown || this.wasd.left.isDown) || Boolean(this.virtual?.left);
+    const right = (this.cursors.right?.isDown || this.wasd.right.isDown) || Boolean(this.virtual?.right);
 
     let vx = 0;
     let vy = 0;
